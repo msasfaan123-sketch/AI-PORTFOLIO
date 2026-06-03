@@ -1,0 +1,80 @@
+{
+  "profile": {
+    "name": "Mohamed Sathak Asfaan",
+    "location": "Chennai, India",
+    "summary": "MCA student and developer focused on Python, Flask, AI integrations, data processing, backend systems, and practical automation.",
+    "education": "MCA student at MEASI Institute of Information Technology.",
+    "experience": "Software and Data Intern at Smaart Healthcare, working on AI-assisted healthcare workflows, backend/data tasks, and automation."
+  },
+  "contact": {
+    "phone": "+91 98847 83437",
+    "email": "ms.asfaan123@gmail.com",
+    "linkedin": "asfaan",
+    "github": "asfaan-dev"
+  },
+  "skills": {
+    "languages": ["Python", "SQL"],
+    "backend": ["Flask", "REST APIs", "API routing", "request handling"],
+    "databases": ["MongoDB", "relational database concepts"],
+    "data": ["Pandas", "data cleaning", "data preprocessing", "CSV processing", "analytics dashboards"],
+    "ai": ["AI voice assistant workflows", "NLP intent classification", "Vapi.ai integration", "semantic search concepts"],
+    "tools": ["Git", "GitHub", "LeetCode", "documentation-first learning"],
+    "summary": "Python, Flask, SQL, MongoDB, Pandas, REST APIs, data processing, AI voice assistant workflows, NLP intent classification, Git/GitHub, and DSA practice."
+  },
+  "achievements": [
+    "Built an AI nurse assistant that reduced manual patient intake effort.",
+    "Improved symptom collection time by around 35%.",
+    "Built VConnect for rural analytics across about 650,000 Indian village records.",
+    "Improved rural data retrieval speed by around 45%.",
+    "Reduced CSV/data preprocessing time by around 50% using optimized processing."
+  ],
+  "projects": {
+    "vconnect": {
+      "name": "VConnect",
+      "aliases": ["vconnect", "v connect", "v-connect", "village analytics", "rural analytics", "village project"],
+      "summary": "VConnect is a rural analytics dashboard that processed data for about 650,000 Indian villages and made rural information easier to search, analyze, and understand.",
+      "problem": "Rural data is often scattered, hard to search, and difficult for users to interpret quickly.",
+      "tech_stack": ["Python", "Pandas", "MongoDB", "Flask", "AI-driven search", "data preprocessing"],
+      "role": "Asfaan worked on data processing, dashboard logic, search improvements, and performance optimization.",
+      "features": ["Village data search", "analytics dashboard", "AI-driven search layer", "large CSV/data preprocessing", "rural information retrieval"],
+      "challenges": ["Handling large datasets", "making search intuitive", "improving retrieval speed", "cleaning and structuring village records"],
+      "impact": "Handled about 650,000 village records, improved retrieval speed by around 45%, and reduced preprocessing time by around 50%.",
+      "followups": {
+        "search": "The AI-driven search combined keyword matching with semantic-similarity ideas so users could search conceptually instead of only exact village or field names.",
+        "scale": "To scale VConnect further, Asfaan would add better indexing, caching, possible sharding, and a more robust vector-search layer.",
+        "database": "MongoDB was useful because village records can be flexible and document-like, making it easier to store changing rural data fields."
+      }
+    },
+    "ai_nurse": {
+      "name": "AI Nurse Triage Voice Assistant",
+      "aliases": ["ai nurse", "nurse assistant", "triage assistant", "voice assistant", "vapi", "healthcare assistant"],
+      "summary": "The AI Nurse Triage Voice Assistant is a healthcare automation project that handled initial patient intake through voice.",
+      "problem": "Nurses spend time collecting repeated symptom information before deciding whether a patient needs urgent human attention.",
+      "tech_stack": ["Flask", "Vapi.ai", "NLP intent classification", "REST APIs", "MongoDB"],
+      "role": "Asfaan contributed to backend logic, symptom-intent handling, nurse escalation rules, and workflow automation.",
+      "features": ["Voice-based intake", "symptom classification", "nurse escalation", "structured prompts", "healthcare workflow support"],
+      "challenges": ["Classifying symptoms safely", "knowing when to escalate to a nurse", "keeping the conversation simple for patients"],
+      "impact": "Helped reduce manual intake effort and improved symptom collection time by around 35%.",
+      "followups": {
+        "escalation": "The system escalated severe symptoms to a human nurse using rules and priority logic, so risky cases were not left only to automation.",
+        "flask": "Flask handled backend routes, request processing, and API responses between the voice layer and application logic.",
+        "vapi": "Vapi.ai provided the voice interaction layer while Flask handled the backend processing."
+      }
+    },
+    "logisense": {
+      "name": "LogiSense 360",
+      "aliases": ["logisense", "logisense 360", "billing system", "subscription billing"],
+      "summary": "LogiSense 360 is a subscription billing and management platform for customer plans, usage tracking, invoices, payment workflows, and service operations.",
+      "problem": "Subscription businesses need reliable automation for plans, invoices, billing cycles, payment tracking, and service workflows.",
+      "tech_stack": ["Backend workflows", "subscription billing logic", "debugging", "feature integration"],
+      "role": "Asfaan contributed to development tasks, backend workflow support, debugging, feature stability, and team collaboration.",
+      "features": ["Customer plan management", "invoice generation", "payment tracking", "billing workflow automation", "service management"],
+      "challenges": ["Keeping billing workflows accurate", "debugging service logic", "integrating features cleanly"],
+      "impact": "Helped make subscription, invoice, and service workflows more organized and less dependent on manual processing.",
+      "followups": {
+        "workflow": "The platform tracks subscriptions and usage, generates invoices, processes billing cycles, and manages customer operations centrally.",
+        "role": "Asfaan's role was development support, debugging, improving workflows, and helping ensure features integrated smoothly."
+      }
+    }
+  }
+}

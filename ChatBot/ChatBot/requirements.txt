@@ -1,0 +1,8 @@
+pandas
+openpyxl
+rapidfuzz
+pypdf
+pyttsx3
+SpeechRecognition
+Flask
+gunicorn

@@ -1,0 +1,13 @@
+2026-05-15 21:17:16	Score=62.52	randomword
+2026-05-15 21:33:39	Score=60.93	how is asfaan
+2026-05-15 21:35:17	Score=46.74	tell me about v connect
+2026-05-15 21:35:30	Score=76.81	tell me about vconnect
+2026-05-15 21:38:13	Score=76.81	tell me about vconnect
+2026-05-15 21:52:56	Score=53.86	vanakkam
+2026-05-15 21:53:06	Score=48.87	contact asfaan
+2026-05-16 19:18:36	Score=81.45	techstack used
+2026-05-16 19:18:42	Score=87.46	techstack
+2026-05-16 19:18:56	Score=69.42	yes
+2026-05-16 20:22:55	Score=62.89	is it a rag chatbot
+2026-05-16 20:23:51	Score=77.26	in proffesional
+2026-06-03 13:00:56	Score=68.5	is he good

@@ -297,7 +297,7 @@ function getReply(userText: string): string {
 
   // Greetings
   if (["hi","hello","hey","good morning","good evening","good afternoon"].some(g => cleaned === g || cleaned.startsWith(g + " "))) {
-    return "Batcomputer online. I'm Asfaan's intelligent portfolio assistant, powered by his actual knowledge base. Ask me about his projects, skills, experience, or anything else!";
+    return "Batcomputer online. I use a three-layer fallback system: Groq AI first, Asfaan's Python portfolio knowledge base second, and built-in frontend answers third. Ask me about his projects, skills, experience, or achievements!";
   }
   // Thanks / bye
   if (["thank you","thanks","ty","thank u"].includes(cleaned))
@@ -436,7 +436,7 @@ export function Chatbot() {
     {
       id: 0,
       from: "bot",
-      text: "Batcomputer online. I'm Asfaan's intelligent portfolio assistant — powered by his actual knowledge base and 113-question interview dataset. Ask me anything!",
+      text: "Batcomputer online. I use a three-layer fallback system: Groq AI first, Asfaan's Python knowledge base (resume, Excel, and JSON) second, and built-in frontend answers third. Ask me about his projects, skills, experience, or achievements!",
     },
   ]);
 

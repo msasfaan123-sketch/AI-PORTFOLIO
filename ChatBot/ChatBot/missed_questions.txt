@@ -11,3 +11,4 @@
 2026-05-16 20:22:55	Score=62.89	is it a rag chatbot
 2026-05-16 20:23:51	Score=77.26	in proffesional
 2026-06-03 13:00:56	Score=68.5	is he good
+2026-06-28 01:24:39	Score=96	why should we hire you

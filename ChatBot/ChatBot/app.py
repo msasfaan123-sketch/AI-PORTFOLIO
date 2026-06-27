@@ -146,8 +146,8 @@ RESUME_FILE = BASE_DIR / "MS.ASFAAN_RESUME.pdf"
 MISSED_QUESTIONS_FILE = BASE_DIR / "missed_questions.txt"
 TRANSCRIPT_DIR = BASE_DIR / "transcripts"
 KNOWLEDGE_BASE_FILE = BASE_DIR / "knowledge_base.json"
-OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions"
-OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "openrouter/free")
+GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
 
 FUZZY_THRESHOLD = 40
 DEBUG_SCORE = False
@@ -369,8 +369,8 @@ memory = {
 }
 
 web_state = None
-last_openrouter_error = None
-last_openrouter_selected_model = None
+last_groq_error = None
+last_groq_selected_model = None
 
 
 # =========================================================
@@ -455,11 +455,11 @@ def finish_response(response, should_exit=False):
     return response, should_exit
 
 
-def openrouter_is_configured():
-    return bool(os.environ.get("OPENROUTER_API_KEY"))
+def groq_is_configured():
+    return bool(os.environ.get("GROQ_API_KEY"))
 
 
-def build_llm_payload(user_input, local_answer, model):
+def build_groq_payload(user_input, local_answer):
     prompt = (
         "You are Mohamed Sathak Asfaan's portfolio assistant. "
         "Answer only using the provided portfolio context. "
@@ -467,7 +467,7 @@ def build_llm_payload(user_input, local_answer, model):
         "If the context is not enough, say that the portfolio data does not include that detail."
     )
     return {
-        "model": model,
+        "model": GROQ_MODEL,
         "messages": [
             {"role": "system", "content": prompt},
             {
@@ -479,61 +479,36 @@ def build_llm_payload(user_input, local_answer, model):
             },
         ],
         "temperature": 0.35,
-        "max_tokens": 260,
+        "max_completion_tokens": 260,
     }
 
 
-def post_chat_completion(url, api_key, payload, extra_headers=None):
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-
-    if extra_headers:
-        headers.update(extra_headers)
-
-    request_data = json.dumps(payload).encode("utf-8")
-    request = urllib.request.Request(url, data=request_data, headers=headers, method="POST")
-
-    with urllib.request.urlopen(request, timeout=12) as response:
-        data = json.loads(response.read().decode("utf-8"))
-
-    choices = data.get("choices", [])
-
-    if not choices:
-        return None, "provider returned no choices.", data.get("model")
-
-    message = choices[0].get("message", {})
-    content = clean_display_text(message.get("content", ""))
-
-    if not content or content.lower() in {"none", "null", "n/a"}:
-        return None, "provider returned an empty message.", data.get("model")
-
-    return content, None, data.get("model")
-
-
-def openrouter_generate_reply(user_input, local_answer):
-    global last_openrouter_error, last_openrouter_selected_model
-    last_openrouter_error = None
-    last_openrouter_selected_model = None
-    api_key = os.environ.get("OPENROUTER_API_KEY")
+def groq_generate_reply(user_input, local_answer):
+    global last_groq_error, last_groq_selected_model
+    last_groq_error = None
+    last_groq_selected_model = None
+    api_key = os.environ.get("GROQ_API_KEY")
 
     if not api_key or not local_answer:
-        last_openrouter_error = "OPENROUTER_API_KEY is not configured."
+        last_groq_error = "GROQ_API_KEY is not configured."
         return None
 
-    payload = build_llm_payload(user_input, local_answer, OPENROUTER_MODEL)
+    payload = build_groq_payload(user_input, local_answer)
+    request = urllib.request.Request(
+        GROQ_CHAT_URL,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+            "Accept": "application/json",
+            "User-Agent": "AsfaanPortfolio/1.0",
+        },
+        method="POST",
+    )
 
     try:
-        content, error, selected_model = post_chat_completion(
-            OPENROUTER_CHAT_URL,
-            api_key,
-            payload,
-            {
-                "HTTP-Referer": os.environ.get("APP_URL", "http://localhost:8080"),
-                "X-OpenRouter-Title": "Asfaan Portfolio Chatbot",
-            },
-        )
+        with urllib.request.urlopen(request, timeout=12) as response:
+            data = json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         try:
             body = e.read().decode("utf-8")
@@ -541,20 +516,31 @@ def openrouter_generate_reply(user_input, local_answer):
             message = error_data.get("error", {}).get("message", body)
         except Exception:
             message = str(e)
-        last_openrouter_error = f"OpenRouter HTTP {e.code}: {message}"
+        last_groq_error = f"Groq HTTP {e.code}: {message}"
         return None
     except urllib.error.URLError as e:
-        last_openrouter_error = f"OpenRouter network error: {e.reason}"
+        last_groq_error = f"Groq network error: {e.reason}"
         return None
     except TimeoutError:
-        last_openrouter_error = "OpenRouter request timed out."
+        last_groq_error = "Groq request timed out."
         return None
     except (json.JSONDecodeError, KeyError) as e:
-        last_openrouter_error = f"OpenRouter response parse error: {e}"
+        last_groq_error = f"Groq response parse error: {e}"
         return None
 
-    last_openrouter_error = error
-    last_openrouter_selected_model = selected_model
+    choices = data.get("choices", [])
+
+    if not choices:
+        last_groq_error = "Groq returned no choices."
+        return None
+
+    content = clean_display_text(choices[0].get("message", {}).get("content", ""))
+
+    if not content or content.lower() in {"none", "null", "n/a"}:
+        last_groq_error = "Groq returned an empty message."
+        return None
+
+    last_groq_selected_model = data.get("model", GROQ_MODEL)
     return content
 
 
@@ -2400,8 +2386,8 @@ def create_web_app():
         return jsonify(
             {
                 "ok": True,
-                "openrouter_configured": openrouter_is_configured(),
-                "openrouter_model": OPENROUTER_MODEL if openrouter_is_configured() else None,
+                "groq_configured": groq_is_configured(),
+                "groq_model": GROQ_MODEL if groq_is_configured() else None,
                 "rows": len(state["index"]["rows"]),
                 "resume_chunks": len(state["resume_index"]["chunks"]),
                 "projects": len(state.get("knowledge_base", {}).get("projects", {})),
@@ -2418,15 +2404,15 @@ def create_web_app():
 
         try:
             local_response, should_exit = process_user_input(message, get_web_state())
-            openrouter_response = openrouter_generate_reply(message, local_response)
+            groq_response = groq_generate_reply(message, local_response)
             return jsonify(
                 {
-                    "reply": openrouter_response or local_response,
-                    "openrouter_configured": openrouter_is_configured(),
-                    "openrouter_error": None if openrouter_response else last_openrouter_error,
-                    "openrouter_requested_model": OPENROUTER_MODEL if openrouter_is_configured() else None,
-                    "openrouter_selected_model": last_openrouter_selected_model if openrouter_response else None,
-                    "source": "openrouter" if openrouter_response else "local",
+                    "reply": groq_response or local_response,
+                    "groq_configured": groq_is_configured(),
+                    "groq_error": None if groq_response else last_groq_error,
+                    "groq_requested_model": GROQ_MODEL if groq_is_configured() else None,
+                    "groq_selected_model": last_groq_selected_model if groq_response else None,
+                    "source": "groq" if groq_response else "local",
                     "should_exit": should_exit,
                 }
             )

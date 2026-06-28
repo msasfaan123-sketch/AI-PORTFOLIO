@@ -49,3 +49,14 @@ React chat -> Python Flask API -> local portfolio retrieval -> Groq -> local ans
 ```
 
 If Groq is not configured, rate-limited, or fails, the Python API returns the local chatbot answer. If the Python API is not running at all, the frontend falls back to its built-in responses.
+
+## Vapi Voice Assistant
+
+The live browser call uses Vapi's Web SDK. Only the public key and assistant ID belong in the frontend:
+
+```env
+VITE_VAPI_PUBLIC_KEY="your_vapi_public_key"
+VITE_VAPI_ASSISTANT_ID="your_vapi_assistant_id"
+```
+
+Add both variables to Vercel before deploying. Never add the Vapi private key to React, Vercel frontend variables, or GitHub.

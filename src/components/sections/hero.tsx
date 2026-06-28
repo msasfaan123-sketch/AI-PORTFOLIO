@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, FolderGit2, Download } from "lucide-react";
+import { ArrowRight, Download, FolderGit2, PhoneCall } from "lucide-react";
 import { BatIcon } from "../bat-icon";
 import { Typewriter } from "../typewriter";
 
@@ -68,9 +68,16 @@ export function Hero() {
         transition={{ delay: 0.9 }}
         className="mt-10 flex flex-wrap items-center justify-center gap-3"
       >
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("start-vapi-call"))}
+          className="inline-flex items-center gap-2 rounded bg-bat px-5 py-3 text-sm font-semibold text-black glow-bat hover:opacity-95"
+        >
+          <PhoneCall className="h-4 w-4" /> Talk to Batcomputer
+        </button>
         <a
           href="#projects"
-          className="group inline-flex items-center gap-2 rounded bg-bat px-5 py-3 text-sm font-semibold text-black glow-bat hover:opacity-95"
+          className="group inline-flex items-center gap-2 rounded border border-bat/40 bg-black/40 px-5 py-3 text-sm font-semibold text-bat backdrop-blur hover:bg-bat/10"
         >
           <FolderGit2 className="h-4 w-4" /> View Projects
           <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />

@@ -11,6 +11,7 @@ import { Achievements } from "@/components/sections/achievements";
 import { AssistantPanel } from "@/components/sections/assistant-panel";
 import { Contact } from "@/components/sections/contact";
 import { Chatbot } from "@/components/chatbot";
+import { VapiCall } from "@/components/vapi-call";
 import { BatIcon } from "@/components/bat-icon";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -42,6 +43,7 @@ function App() {
               © 2026 Mohamed Sathak Asfaan · Encrypted by Wayne Enterprises
             </footer>
             <Chatbot />
+            <VapiCall />
           </>
         )}
         <Toaster />

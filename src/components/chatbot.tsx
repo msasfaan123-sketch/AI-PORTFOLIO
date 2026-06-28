@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Zap } from "lucide-react";
+import { Mic, PhoneCall, Send, Volume2, VolumeX, X, Zap } from "lucide-react";
 import { BatIcon } from "./bat-icon";
 
 // ============================================================
@@ -426,11 +426,52 @@ function TypedBotText({ messageId, text }: { messageId: number; text: string }) 
 // ============================================================
 type Msg = { id: number; from: "bot" | "user"; text: string };
 
+type SpeechResultEvent = Event & {
+  resultIndex: number;
+  results: {
+    length: number;
+    [index: number]: {
+      0: { transcript: string };
+      isFinal: boolean;
+    };
+  };
+};
+
+type SpeechErrorEvent = Event & { error: string };
+
+type BrowserSpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  onresult: ((event: SpeechResultEvent) => void) | null;
+  onerror: ((event: SpeechErrorEvent) => void) | null;
+  onend: (() => void) | null;
+};
+
+type SpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
+
 export function Chatbot() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [speakerEnabled, setSpeakerEnabled] = useState(
+    () => window.localStorage.getItem("batcomputer-speaker") === "on",
+  );
+  const [listening, setListening] = useState(false);
   const msgIdRef = useRef(1);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const recognitionBaseInputRef = useRef("");
+  const ignoreRecognitionResultsRef = useRef(false);
+  const speakerEnabledRef = useRef(speakerEnabled);
+  const speechWindow = window as typeof window & {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  };
+  const recognitionSupported = Boolean(speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition);
+  const synthesisSupported = "speechSynthesis" in window;
 
   const [msgs, setMsgs] = useState<Msg[]>([
     {
@@ -457,11 +498,87 @@ export function Chatbot() {
     return () => { document.body.style.overflow = prev; };
   }, [open]);
 
+  useEffect(() => {
+    speakerEnabledRef.current = speakerEnabled;
+    window.localStorage.setItem("batcomputer-speaker", speakerEnabled ? "on" : "off");
+
+    if (!speakerEnabled && synthesisSupported) {
+      window.speechSynthesis.cancel();
+    }
+  }, [speakerEnabled, synthesisSupported]);
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+
   const quick = ["Projects", "Skills", "Contact", "Education", "Achievements", "Internship", "Tell me about yourself", "Hobbies"];
+
+  const speakReply = (text: string) => {
+    if (!speakerEnabledRef.current || !synthesisSupported) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text.replace(/[#*_`]/g, ""));
+    utterance.lang = "en-IN";
+    utterance.rate = 1;
+    utterance.pitch = 0.95;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleListening = () => {
+    if (!recognitionSupported) return;
+
+    if (listening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+    if (!Recognition) return;
+
+    const recognition = new Recognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = "en-IN";
+    ignoreRecognitionResultsRef.current = false;
+    recognitionBaseInputRef.current = input.trim();
+
+    recognition.onresult = (event) => {
+      if (ignoreRecognitionResultsRef.current) return;
+
+      let transcript = "";
+
+      for (let index = event.resultIndex; index < event.results.length; index++) {
+        transcript += event.results[index][0].transcript;
+      }
+
+      const prefix = recognitionBaseInputRef.current;
+      setInput(`${prefix}${prefix && transcript ? " " : ""}${transcript}`.trim());
+    };
+    recognition.onerror = () => setListening(false);
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setListening(false);
+    };
+    recognitionRef.current = recognition;
+
+    try {
+      recognition.start();
+      setListening(true);
+    } catch {
+      recognitionRef.current = null;
+      setListening(false);
+    }
+  };
 
   const send = async (t?: string) => {
     const text = (t ?? input).trim();
     if (!text) return;
+    ignoreRecognitionResultsRef.current = true;
+    recognitionRef.current?.stop();
+    recognitionBaseInputRef.current = "";
     setInput("");
     const userId = msgIdRef.current++;
     setMsgs((m) => [...m, { id: userId, from: "user", text }]);
@@ -471,8 +588,11 @@ export function Chatbot() {
     try {
       const reply = await getPythonReply(text);
       setMsgs((m) => m.map((msg) => (msg.id === botId ? { ...msg, text: reply } : msg)));
+      speakReply(reply);
     } catch {
-      setMsgs((m) => m.map((msg) => (msg.id === botId ? { ...msg, text: getReply(text) } : msg)));
+      const fallbackReply = getReply(text);
+      setMsgs((m) => m.map((msg) => (msg.id === botId ? { ...msg, text: fallbackReply } : msg)));
+      speakReply(fallbackReply);
     }
   };
 
@@ -524,9 +644,37 @@ export function Chatbot() {
                     </div>
                   </div>
                 </div>
-                <button type="button" onClick={() => setOpen(false)} className="text-muted-foreground hover:text-bat" aria-label="Close chat">
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      window.dispatchEvent(new CustomEvent("start-vapi-call"));
+                    }}
+                    className="grid h-8 w-8 place-items-center rounded text-muted-foreground transition hover:bg-bat/10 hover:text-bat"
+                    aria-label="Start live Batcomputer voice call"
+                    title="Talk to Batcomputer"
+                  >
+                    <PhoneCall className="h-4 w-4" />
+                  </button>
+                  {synthesisSupported && (
+                    <button
+                      type="button"
+                      onClick={() => setSpeakerEnabled((enabled) => !enabled)}
+                      className={`grid h-8 w-8 place-items-center rounded transition ${
+                        speakerEnabled ? "bg-bat/15 text-bat" : "text-muted-foreground hover:text-bat"
+                      }`}
+                      aria-label={speakerEnabled ? "Turn voice replies off" : "Turn voice replies on"}
+                      aria-pressed={speakerEnabled}
+                      title={speakerEnabled ? "Voice replies on" : "Voice replies off"}
+                    >
+                      {speakerEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                    </button>
+                  )}
+                  <button type="button" onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center text-muted-foreground hover:text-bat" aria-label="Close chat">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Messages */}
@@ -576,6 +724,22 @@ export function Chatbot() {
                     placeholder="> Ask anything about Asfaan..."
                     className="flex-1 rounded border border-bat/30 bg-black/60 px-3 py-2 font-mono text-sm text-bat placeholder:text-bat/40 focus:outline-none focus:ring-1 focus:ring-bat"
                   />
+                  {recognitionSupported && (
+                    <button
+                      type="button"
+                      onClick={toggleListening}
+                      className={`grid h-9 w-9 shrink-0 place-items-center rounded border transition ${
+                        listening
+                          ? "animate-pulse border-red-400/70 bg-red-400/15 text-red-300"
+                          : "border-bat/30 text-bat hover:bg-bat/10"
+                      }`}
+                      aria-label={listening ? "Stop voice input" : "Start voice input"}
+                      aria-pressed={listening}
+                      title={listening ? "Listening" : "Voice input"}
+                    >
+                      <Mic className="h-4 w-4" />
+                    </button>
+                  )}
                   <button type="submit" className="grid h-9 w-9 place-items-center rounded bg-bat text-black hover:opacity-90">
                     <Send className="h-4 w-4" />
                   </button>
